@@ -60,7 +60,7 @@ if ($captcha_provider == 'google_recaptcha_v2'):
 
     <div id="js-mw-google-recaptcha-v2-<?php print $params['id'] ?>"></div>
     <input name="captcha" type="hidden" value=""
-           id="js-mw-google-recaptcha-v2-<?php print $params['id'] ?>-input" class="mw-captcha-input"/>
+           id="-input" class="mw-captcha-input"/>
 
 
 <?php elseif ($captcha_provider == 'google_recaptcha_v3'): ?>
@@ -71,7 +71,6 @@ if ($captcha_provider == 'google_recaptcha_v2'):
     <script>
 
         $(document).ready(function () {
-            $('[type="hidden"]').attr('type', 'text')
             var captcha_el = $('#<?php print $scopeID; ?>');
             if(captcha_el) {
                 var parent_form = mw.tools.firstParentWithTag(captcha_el[0], 'form');
