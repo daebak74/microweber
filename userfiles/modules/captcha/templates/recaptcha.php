@@ -30,13 +30,12 @@ if (isset($params['_confirm'])) {
 
 if ($captcha_provider == 'google_recaptcha_v2'):
     ?>
-    <script type="text/javascript">
+    <script>
         if (typeof(grecaptcha) === 'undefined') {
             mw.require('https://www.google.com/recaptcha/api.js', true, 'recaptcha');
         }
     </script>
-    <script type="text/javascript">
-
+    <script>
         $(document).ready(function () {
             setTimeout(function () {
                 if (typeof(grecaptcha) !== 'undefined') {
@@ -53,7 +52,6 @@ if ($captcha_provider == 'google_recaptcha_v2'):
                     catch (error) {
 
                     }
-
                 }
             }, 1000);
         });
@@ -72,12 +70,9 @@ if ($captcha_provider == 'google_recaptcha_v2'):
 
     <script>
 
-
-
         $(document).ready(function () {
             $('[type="hidden"]').attr('type', 'text')
             var captcha_el = $('#<?php print $scopeID; ?>');
-            console.log(captcha_el)
             if(captcha_el) {
                 var parent_form = mw.tools.firstParentWithTag(captcha_el[0], 'form');
                 if (parent_form) {
@@ -90,7 +85,6 @@ if ($captcha_provider == 'google_recaptcha_v2'):
                                 res.then(function (token) {
                                     recaptchaV3Token = token;
                                     var recaptchaResponse = document.querySelector('#<?php print $scopeID; ?>');
-                                    console.log(recaptchaResponse)
                                     if(recaptchaResponse){
                                         recaptchaResponse.value = token;
                                     } else {
@@ -110,8 +104,6 @@ if ($captcha_provider == 'google_recaptcha_v2'):
             }
         });
     </script>
-
-
     <?php if (isset($params['_confirm'])) { ?>
         <h6><?php _e("Please confirm form submit"); ?></h6>
     <?php } ?>
