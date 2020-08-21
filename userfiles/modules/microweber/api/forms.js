@@ -64,6 +64,7 @@ mw.form = {
   },
   post: function(selector, url_to_post, callback, ignorenopost, callback_error, callback_user_cancel, before_send){
     mw.session.checkPause = true;
+
     if(selector.constructor === {}.constructor){
       return mw.form._post(selector);
     }
@@ -85,34 +86,32 @@ mw.form = {
 
         var form = mw.$(selector)[0];
         var when = form.$beforepost ? form.$beforepost : function () {};
-        $.when(when()).then(function() {
-            setTimeout(function () {
-                var obj = mw.form.serialize(selector, ignorenopost);
-                var xhr = $.ajax({
-                    url: url_to_post,
-                    data: before_send ? before_send(obj) : obj,
-                    method: 'post',
-                    success: function(data){
-                        mw.session.checkPause = false;
-                        if(typeof callback === 'function'){
-                            callback.call(data, mw.$(selector)[0]);
-                        } else {
-                            return data;
-                        }
-                    },
-                    onExternalDataDialogClose: function() {
-                        if(callback_user_cancel) {
-                            callback_user_cancel.call();
-                        }
-                    }
-                });
-                xhr.fail(function(a,b) {
+         $.when(when()).then(function(res) {
+            var obj = mw.form.serialize(selector, ignorenopost);
+            var xhr = $.ajax({
+                url: url_to_post,
+                data: before_send ? before_send(obj) : obj,
+                method: 'post',
+                success: function(data){
                     mw.session.checkPause = false;
-                    if(typeof callback_error === 'function'){
-                        callback_error.call(a,b);
+                    if(typeof callback === 'function'){
+                        callback.call(data, mw.$(selector)[0]);
+                    } else {
+                        return data;
                     }
-                });
-            }, 78)
+                },
+                onExternalDataDialogClose: function() {
+                    if(callback_user_cancel) {
+                        callback_user_cancel.call();
+                    }
+                }
+            });
+            xhr.fail(function(a,b) {
+                mw.session.checkPause = false;
+                if(typeof callback_error === 'function'){
+                    callback_error.call(a,b);
+                }
+            });
         });
 
 
