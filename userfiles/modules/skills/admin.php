@@ -1,242 +1,118 @@
-<?php only_admin_access(); ?>
-<?php
-
-$file = get_option('file', $params['id']);
-if (!$file) {
-    $file = '[{"skill":"", "percent": "78", "style":"primary"}]';
-}
-$skills = json_decode($file, true);
-if (sizeof($skills) == 0) {
-    $skills = array();
-}
-
-?>
-
-<style>
-    .skillfield {
-        padding: 40px 10px 10px 10px;
-        margin: 10px auto;
-        border: 1px solid #eee;
-        border-radius: 3px;
-        position: relative;
-        display: block;
-        overflow: hidden;
-    }
-
-    .skillfield .mw-icon-drag {
-        font-size: 20px;
-        display: inline-block;
-        padding: 2px 7px;
-        cursor: pointer;
-        position: absolute;
-        top: 10px;
-        left: 10px;
-    }
-
-    .skillfield .mw-icon-bin {
-        font-size: 20px;
-        display: inline-block;
-        padding: 2px 7px;
-        cursor: pointer;
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        color: #f12b1c;
-    }
-
-
-
-    .skillfield .mw-icon-drag {
-        cursor: -moz-grab;
-        cursor: -webkit-grab;
-        cursor: grab;
-    }
-
-    .skillfield .mw-ui-field-holder {
-        clear: none;
-    }
-
-    .skillfield {
-        padding-bottom: 20px;
-        background: white;
-    }
-
-    .skill {
-        width: 70%;
-        clear: both;
-    }
-
-    .skillfield .mw-ui-field-holder {
-        float: left;
-    }
-
-    .mufh-1 {
-        width: 100%;
-    }
-
-    .mufh-2 {
-        width: 49%;
-        margin: 0 1%;
-    }
-
-    .mufh-3 {
-        width: 49%;
-    }
-
-    .skillfield.ui-sortable-helper {
-        box-shadow: rgba(0, 0, 0, 0.2) 0px 7px 15px
-    }
-
-    .skillfield select,
-    .skillfield input {
-        width: 100%
-    }
-
-</style>
-
 <script>
-    addNewskill = function () {
-        var after = ''
-            + '<span class="skillfield">'
-            + '<span class="mw-icon-drag"></span>'
-            + '<span class="mw-icon-bin"></span>'
-            + '<div class="mw-ui-field-holder mufh-1">'
-            + '<label class="mw-ui-label">Skill Name</label><input type="text" autocomplete="off"  placeholder="Insert skill Name" class="mw-ui-field skill" />'
-            + '</div><div class="mw-ui-field-holder mufh-2">'
-            + '<label class="mw-ui-label">Value(%)</label><input type="number" autocomplete="off" min="0" max="100" step="1" value="50 placeholder="Percent" class="mw-ui-field percent-field" />'
+    mw.require("files.js");
 
-            + '</div><div class="mw-ui-field-holder mufh-3">'
-            + '<label class="mw-ui-label">Style</label><select class="mw-ui-field" data-value="primary">'
-            + '<option value="">Choose Style</option>'
-            + '<option value="primary">Primary</option>'
-            + '<option value="warning">Warning</option>'
-            + '<option value="danger">Danger</option>'
-            + '<option value="success">Success</option>'
-            + '<option value="info">Info</option>'
-            + '</select></div>'
-            + '</span>';
+    mw.lib.require('font_awesome5');
 
-
-        $(".skillfield:last").after(after);
-        $(".skill:last").focus();
-        init();
+    setprior = function (v, t) {
+        t = t || false;
+        mwd.getElementById('prior').value = v;
+        $(mwd.getElementById('prior')).trigger('change');
+        if (!!t) {
+            setTimeout(function () {
+                $(t).trigger('change');
+            }, 70);
+        }
     }
 
-    init = function () {
-        $(".skill").each(function () {
-            if (!this.__activated) {
-                this.__activated = true;
-                var root = $(this).parents('.skillfield')
-                $('input', root).on('change input paste', function () {
-                    save();
-                });
+    $(document).ready(function () {
+        
+        var timer_color_pick_shape;
 
-                $('.mw-icon-bin', root).on('click', function () {
-                    mw.confirm('Are you sure', function () {
-                        root.fadeOut(function () {
-                            root.remove();
-                            save();
-                        })
-                    })
+        mw.colorPicker({
+            element:'.color_picker_for_shape',
+            position:'bottom-left',
+            value:'#000000',
 
-                });
+            onchange:function(color){
 
-                mw.$('.percent-field', root).on('change', function () {
-                    save()
-                })
+                window.clearTimeout(timer_color_pick_shape);
 
-                mw.$('select[data-value]', root).each(function () {
-                    $(this).val($(this).dataset('value')).on('change', function () {
-                        save()
-                    })
-                })
-            }
+                mw.$('#shape_color_change_val').val(color);
+
+                timer_color_pick_shape = window.setTimeout(function(){
+
+                    mw.$('#shape_color_change_val').trigger('change');
+
+                },500);
+
+            },
+            method: 'inline'
         });
 
-        if ($('.skillfield').length === 1) {
-            $('.skillfield .mw-icon-bin:first').hide()
-        } else {
-            $('.skillfield .mw-icon-bin:first').show()
-        }
-    }
+        var timer_color_pick_overlay;
 
-    time = null;
+        mw.colorPicker({
+            element:'.color_picker_for_overlay',
+            position:'bottom-left',
+            value:'#000000',
 
-    save = function () {
-        clearTimeout(time);
-        time = setTimeout(function () {
-            var final = [];
-            $(".skill").each(function () {
-                var style = $(this).parents('.skillfield').find('select').val();
-                if (!style) style = 'primary'
-                final.push({skill: this.value, percent: $(this).parents('.skillfield').find('.percent-field').val(), style: style});
-            });
-            $("#file").val(JSON.stringify(final)).trigger('change');
-        }, 700);
-        if ($('.skillfield').length === 1) {
-            $('.skillfield .mw-icon-bin:first').hide()
+            onchange:function(color){
 
-        }
-        else {
-            $('.skillfield .mw-icon-bin:first').show()
-        }
+                window.clearTimeout(timer_color_pick_overlay);
 
-    }
+                mw.$('#overlay_color_change_val').val(color);
 
-    sort = function () {
-        $(".skills").sortable({
-            axis: 'y',
-            stop: function () {
-                save()
+                timer_color_pick_overlay = window.setTimeout(function(){
+
+                    mw.$('#overlay_color_change_val').trigger('change');
+
+                },500);
+
             },
-            handle: '.mw-icon-drag'
-        })
-    }
+            method: 'inline'
+        });
 
-    $(window).bind('load', function () {
-        sort();
-        init();
-    });
+    })
+
 </script>
 
-<div class="module-live-edit-settings module-skills-settings">
-    <div class="mw-ui-field-holder">
-        <label class="mw-ui-label p-b-0">Set your skills</label>
+<div class="mw-modules-tabs">
+
+    <div class="mw-accordion-item">
+        <div class="mw-ui-box-header mw-accordion-title">
+            <div class="header-holder">
+                <i class="mw-icon-gear"></i> <?php print _e('Settings'); ?>
+            </div>
+        </div>
+        <div class="mw-accordion-content mw-ui-box mw-ui-box-content">
+
+            <div class="mw-ui-field-holder">
+                <label class="mw-ui-label"><?php _e("Shape Color"); ?></label>
+                <div class="color_picker_for_shape"></div>
+                <input id="shape_color_change_val"  name="shape_color" placeholder="#000000" class="mw-ui-field mw_option_field w100" type="text" data-mod-name="<?php print $params['data-type'] ?>" value="<?php print get_option('shape_color', $params['id']) ?>"/>     
+            </div>
+
+            <hr />
+
+            <div class="mw-ui-field-holder">
+                <label class="mw-ui-check">
+                    <input id="chk_overlay" name="overlay" class="mw-ui-field mw_option_field" type="checkbox" data-mod-name="<?php print $params['data-type'] ?>" value="y" <?php if (get_option('overlay', $params['id']) == 'y') { ?> checked='checked' <?php } ?>/>
+                    <span></span>
+                    <span><?php _e("Overlay"); ?></span>
+                </label>
+            </div>
+            <div class="mw-ui-field-holder">
+                <label class="mw-ui-label"><?php _e("Color"); ?></label>
+                <div class="color_picker_for_overlay"></div>
+                <input id="overlay_color_change_val"  name="overlay_color" placeholder="#000000" class="mw-ui-field mw_option_field w100" type="text" data-mod-name="<?php print $params['data-type'] ?>" value="<?php print get_option('overlay_color', $params['id']) ?>"/>     
+            </div>
+            <div class="mw-ui-field-holder">
+                <label class="mw-ui-label"><?php _e("Opacity"); ?></label>
+                <div class="overlay_opacity"></div>
+                <input id="overlay_opacity"  name="overlay_opacity" placeholder="<?php print _e('From 0 to 10'); ?>" class="mw-ui-field mw_option_field w100" type="number" min="1" max="5" step="1" data-mod-name="<?php print $params['data-type'] ?>" value="<?php print get_option('overlay_opacity', $params['id']) ?>"/>     
+            </div>
+        </div>
     </div>
 
-    <div class="skills">
-        <?php foreach ($skills as $skill) { ?>
-            <span class="skillfield">
-            <span class="mw-icon-drag"></span>
-            <span class="mw-icon-bin"></span>
-
-            <div class="mw-ui-field-holder mufh-1">
-              <label class="mw-ui-label">Skill Name</label>
-              <input type="text" autocomplete="off" value="<?php print $skill['skill']; ?>" placeholder="Insert skill Name" class="mw-ui-field skill"/>
+    <div class="mw-accordion-item">
+        <div class="mw-ui-box-header mw-accordion-title">
+            <div class="header-holder">
+                <i class="mw-icon-beaker"></i> <?php print _e('Templates'); ?>
             </div>
-
-            <div class="mw-ui-field-holder mufh-2">
-              <label class="mw-ui-label">Value(%)</label>
-              <input type="number" min="0" max="100" step="1" autocomplete="off" value="<?php print isset($skill['percent']) ? $skill['percent'] : 50; ?>" placeholder="Percent" class="mw-ui-field percent-field"/>
-            </div>
-
-            <div class="mw-ui-field-holder mufh-3">
-              <label class="mw-ui-label">Style</label>
-              <select class="mw-ui-field" data-value="<?php print isset($skill['style']) ? $skill['style'] : 'primary' ?>">
-                <option value="">Choose Style</option>
-                <option value="primary">Primary</option>
-                <option value="warning">Warning</option>
-                <option value="danger">Danger</option>
-                <option value="success">Success</option>
-                <option value="info">Info</option>
-              </select>
-            </div>
-        </span>
-        <?php } ?>
+        </div>
+        <div class="mw-accordion-content mw-ui-box mw-ui-box-content">
+            <module type="admin/modules/templates"/>
+        </div>
     </div>
 
-    <span class="mw-ui-btn mw-ui-btn-info w100" onclick="addNewskill();"><span class="mw-icon-plus"></span> Add New</span>
-
-    <textarea name="file" id="file" disabled="disabled" class="mw_option_field" style="display: none"><?php print $file; ?></textarea>
 </div>
-
